@@ -4,29 +4,47 @@ package tech.fedorov.mygooglemaps;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.os.Parcelable;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity implements
         OnMapReadyCallback, GoogleMap.OnMapClickListener {
-
+    private List<LatLng> points = new ArrayList<>();
     private GoogleMap mMap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        if (savedInstanceState != null) {
+            this.points = (List<LatLng>) savedInstanceState.getSerializable("points");
+        }
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState){
+        super.onSaveInstanceState(outState);
+        outState.putSerializable("points", (Serializable) points);
+
     }
 
     /**
@@ -49,6 +67,19 @@ public class MainActivity extends AppCompatActivity implements
                 .position(anyPlace)
                 .title("Marker at any place"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(anyPlace));
+        if (points != null && points.size() != 0) {
+            Toast.makeText(getApplicationContext(), "Reset", Toast.LENGTH_SHORT).show();
+            Log.d("Points", String.valueOf(points.size()));
+            for (int i = 0; i < points.size(); i++) {
+                Log.d("Points", String.valueOf(points.get(i)));
+                mMap.addMarker(new MarkerOptions()
+                        .position(points.get(i))
+                        .title("Marker at any place"));
+                if (i == points.size() - 1) {
+                    mMap.moveCamera(CameraUpdateFactory.newLatLng(points.get(i)));
+                }
+            }
+        }
     }
 
     @Override
@@ -57,6 +88,7 @@ public class MainActivity extends AppCompatActivity implements
         mMap.addMarker(new MarkerOptions()
                 .position(point)
                 .title("Marker at any place"));
+        points.add(point);
         mMap.moveCamera(CameraUpdateFactory.newLatLng(point));
     }
 }
